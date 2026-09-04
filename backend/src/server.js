@@ -82,7 +82,8 @@ app.delete("/users/:id", (req, res) => {
 // Centralize Error Handling Middleware
 app.use((err, req, res, next) => {
   return res.status(500).json({
-    error: "Something went wrong",
+    error: "Something went wrong on ther server...",
+    message: err.message,
   });
 });
 
