@@ -1,5 +1,4 @@
 import express from "express";
-import { users } from "./fakeDB/fakeUsers.js";
 import { routes as apiRoutes } from "./routes/index.js";
 const app = express();
 
@@ -7,7 +6,6 @@ app.use(express.json());
 
 // CRUD routes and endpoints
 
-app.use("/api", apiRoutes);
 app.get("/", (req, res) => {
   res.send(`<!doctype html>
 <html lang="en">
@@ -113,6 +111,8 @@ app.get("/", (req, res) => {
   </body>
 </html>`);
 });
+
+app.use("/api", apiRoutes);
 
 // Centralize Error Handling Middleware
 app.use((err, req, res, next) => {
