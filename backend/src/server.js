@@ -78,22 +78,22 @@ app.put("/users/:id", (req, res, next) => {
 // Delete users
 app.delete("/users/:id", (req, res, next) => {
   try {
-    // const user = users.find((u) => u.id === req.params.id);
+    const user = users.find((u) => u.id === req.params.id);
 
-    // if (!user) {
-    //   return res.status(404).json({ error: "User not found!" });
-    // }
-
-    // const index = users.indexOf(user);
-    // users.splice(index, 1);
-
-    const index = users.findIndex((u) => u.id === req.params.id);
-
-    if (index === -1) {
+    if (!user) {
       return res.status(404).json({ error: "User not found!" });
     }
 
+    const index = users.indexOf(user);
     users.splice(index, 1);
+
+    // const index = users.findIndex((u) => u.id === req.params.id);
+
+    // if (index === -1) {
+    //   return res.status(404).json({ error: "User not found!" });
+    // }
+
+    // users.splice(index, 1);
 
     return res.status(204).send();
   } catch (err) {
