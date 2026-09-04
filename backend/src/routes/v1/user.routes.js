@@ -4,7 +4,7 @@ import { users } from "../../fakeDB/fakeUsers.js";
 export const router = Router();
 
 // Read user
-router.get("/users", (req, res, next) => {
+router.get("/", (req, res, next) => {
   try {
     res.send(users);
   } catch (err) {
@@ -13,7 +13,7 @@ router.get("/users", (req, res, next) => {
 });
 
 // Create users
-router.post("/users", (req, res, next) => {
+router.post("/", (req, res, next) => {
   try {
     const { username, email, password } = req.body;
 
@@ -45,7 +45,7 @@ router.post("/users", (req, res, next) => {
 });
 
 // Update users
-router.put("/users/:id", (req, res, next) => {
+router.put("/:id", (req, res, next) => {
   try {
     const user = users.find((u) => u.id === req.params.id);
 
@@ -72,7 +72,7 @@ router.put("/users/:id", (req, res, next) => {
 });
 
 // Delete users
-router.delete("/users/:id", (req, res, next) => {
+router.delete("/:id", (req, res, next) => {
   try {
     const user = users.find((u) => u.id === req.params.id);
 
