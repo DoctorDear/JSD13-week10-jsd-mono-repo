@@ -24,4 +24,9 @@ Content-Type: application/json
 ### Delete a user
 DELETE http://localhost:3001/users/1
 
+### Trigger centralize error handling middleware
+POST http://localhost:3001/users
+Content-Type: application/json
 
+{
+  "username": "test",
