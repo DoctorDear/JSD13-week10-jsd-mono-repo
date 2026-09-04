@@ -42,10 +42,49 @@ app.post("/users", (req, res) => {
 });
 
 // Update users
-app.put("/users/:id", (req, res) => {});
+app.put("/users/:id", (req, res) => {
+  const user = users.find((u) => u.id === req.params.id);
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found!" });
+  }
+
+  const { username, email, password } = req.body;
+
+  if (!username || !email || !password) {
+    return res
+      .status(400)
+      .json({ error: "username, email and password are required!" });
+  }
+
+  user.username = username;
+  user.email = email;
+  user.password = password;
+
+  return res.status(200).json(user);
+});
 
 // Delete users
-app.delete("/users/:id", (req, res) => {});
+app.delete("/users/:id", (req, res) => {
+  const user = users.find((u) => u.id === req.params.id);
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found!" });
+  }
+
+  const index = users.indexOf(user);
+
+  users.splice(index, 1);
+
+  return res.status(204).send();
+});
+
+// Centralize Error Handling Middleware
+app.use((err, req, res, next) => {
+  return res.status(500).json({
+    error: "Something went wrong",
+  });
+});
 
 const PORT = 3001;
 
