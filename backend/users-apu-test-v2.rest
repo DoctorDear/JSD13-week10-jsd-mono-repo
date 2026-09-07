@@ -14,3 +14,7 @@ Content-Type: application/json
   "email": "dearchirasak@example.com",
   "password": "pass123" 
 }
+
+
+### Delete User
+DELETE {{baseUrl}}/users/6a9e622f36f97c1081654d51
