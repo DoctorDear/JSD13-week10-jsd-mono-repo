@@ -47,14 +47,13 @@ router.put("/:id", async (req, res, next) => {
       req.params.id,
       { username, email, password },
       { new: true, runValidators: true },
-    );
+    ).select("-password");
 
     if (!updateUser) {
       return res.status(404).json({ error: "User not found!" });
     }
-    const { password: _password, ...userWithoutPassword } =
-      updateUser.toObject();
-    return res.status(200).json(userWithoutPassword);
+
+    return res.status(200).json(updateUser);
   } catch (err) {
     next(err);
   }

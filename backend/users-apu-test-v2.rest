@@ -21,7 +21,7 @@ PUT {{baseUrl}}/users/6a9e62ec36f97c1081654d53
 Content-Type: application/json
 
 {
-  "username": "Chirasak Updated",
+  "username": "ChirasakUpandDown",
   "email": "chirasak_updated@example.com",
   "password": "newpassword123"
 }
