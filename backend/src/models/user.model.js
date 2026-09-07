@@ -4,9 +4,9 @@ const userSchema = mongoose.Schema(
   {
     username: { type: String },
     email: { type: String },
-    password: { type: String },
+    password: { type: String, select: false },
   },
   { timestamps: true },
 );
 
-const User = mongoose.model("User", userSchema);
+export const User = mongoose.model("User", userSchema);
