@@ -24,16 +24,36 @@ router.post("/", async (req, res, next) => {
     }
     const newUser = await User.create({ username, email, password });
 
-    const { password: _password, ...userWithoutPassord } = newUser.toObject();
-    return res.status(201).json(userWithoutPassord);
+    const { password: _password, ...userWithoutPassword } = newUser.toObject();
+    return res.status(201).json(userWithoutPassword);
   } catch (err) {
     next(err);
   }
 });
 
 // Update users
-router.put("/:id", (req, res, next) => {
+router.put("/:id", async (req, res, next) => {
   try {
+    const { username, email, password } = req.body;
+
+    if (!username || !email || !password) {
+      return res
+        .status(400)
+        .json({ error: "username, email and password are required!" });
+    }
+
+    const updateUser = await User.findByIdAndUpdate(
+      req.params.id,
+      { username, email, password },
+      { new: true, runValidators: true },
+    );
+
+    if (!updateUser) {
+      return res.status(404).json({ error: "User not found!" });
+    }
+    const { password: _password, ...userWithoutPassword } =
+      updateUser.toObject();
+    return res.status(200).json(userWithoutPassword);
   } catch (err) {
     next(err);
   }

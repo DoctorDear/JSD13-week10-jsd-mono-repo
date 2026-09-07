@@ -16,5 +16,18 @@ Content-Type: application/json
 }
 
 
+### Update a user
+PUT {{baseUrl}}/users/6a9e62ec36f97c1081654d53
+Content-Type: application/json
+
+{
+  "username": "Chirasak Updated",
+  "email": "chirasak_updated@example.com",
+  "password": "newpassword123"
+}
+
+
 ### Delete User
 DELETE {{baseUrl}}/users/6a9e622f36f97c1081654d51
+
+
