@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { Router } from "express";
 import { User } from "../../models/user.model.js";
 export const router = Router();

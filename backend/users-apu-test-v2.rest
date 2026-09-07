@@ -28,6 +28,6 @@ Content-Type: application/json
 
 
 ### Delete User
-DELETE {{baseUrl}}/users/6a9e622f36f97c1081654d51
+DELETE {{baseUrl}}/users/6a9e630136f97c1081654d56
 
 
