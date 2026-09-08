@@ -54,6 +54,7 @@ router.put("/pg/:id", async (req, res, next) => {
       .from("users")
       .update({ username, email, password })
       .eq("id", req.params.id);
+
     if (error) throw error;
     return res.status(201).json({ message: "update user completed " });
   } catch (err) {
