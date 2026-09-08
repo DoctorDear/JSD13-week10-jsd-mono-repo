@@ -7,7 +7,9 @@ export const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function connectSupabase() {
   try {
-    supabase.from("users").select("id").limit(1);
+    const { error } = await supabase.from("users").select("id").limit(1);
+    if (error) throw error;
+    console.log("Supabase connected 🟢");
   } catch (error) {
     console.error("Supabase connection error ❌", error);
     throw error;
