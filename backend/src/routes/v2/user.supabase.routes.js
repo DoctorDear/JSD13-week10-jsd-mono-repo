@@ -42,6 +42,20 @@ router.post("/pg", async (req, res, next) => {
 // Update users
 router.put("/pg/:id", async (req, res, next) => {
   try {
+    const { username, email, password } = req.body;
+
+    if (!username || !email || !password) {
+      return res
+        .status(400)
+        .json({ error: "username, email and password are required!" });
+    }
+
+    const { data, error } = await supabase
+      .from("users")
+      .update({ username, email, password })
+      .eq("id", req.params.id);
+    if (error) throw error;
+    return res.status(201).json({ message: "update user completed " });
   } catch (err) {
     next(err);
   }

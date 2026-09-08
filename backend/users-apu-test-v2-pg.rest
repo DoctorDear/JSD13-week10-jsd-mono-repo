@@ -16,12 +16,12 @@ Content-Type: application/json
 
 
 ### Update a user
-PUT {{baseUrl}}/users/pg/1
+PUT {{baseUrl}}/users/pg/827be652-6da3-4e91-ba39-809986f943be
 Content-Type: application/json
 
 {
-  "username": "ChirasakUpandDown",
-  "email": "chirasak_updated@example.com",
+  "username": "ChirasakHellow",
+  "email": "Hello@example.com",
   "password": "newpassword123"
 }
 
