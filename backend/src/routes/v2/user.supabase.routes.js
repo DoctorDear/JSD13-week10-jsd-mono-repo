@@ -64,6 +64,22 @@ router.put("/pg/:id", async (req, res, next) => {
 // Delete users
 router.delete("/pg/:id", async (req, res, next) => {
   try {
+    const { data, error } = await supabase
+      .from("users")
+      .delete()
+      .eq("id", req.params.id)
+      .select()
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!data) {
+      return res.status(404).json({ error: "User not found!" });
+    }
+
+    return res.status(200).json({
+      message: "User successfully deleted",
+    });
   } catch (err) {
     next(err);
   }

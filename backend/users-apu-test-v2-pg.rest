@@ -10,13 +10,13 @@ Content-Type: application/json
 
 {
   "username": "Chirasak",
-  "email": "dearchirasak4@example.com",
+  "email": "dearchirasak2@example.com",
   "password": "pass123" 
 }
 
 
 ### Update a user
-PUT {{baseUrl}}/users/pg/827be652-6da3-4e91-ba39-809986f943be
+PUT {{baseUrl}}/users/pg/35bcc849-6433-4940-ab3b-9f1d291a3c6b
 Content-Type: application/json
 
 {
@@ -27,6 +27,6 @@ Content-Type: application/json
 
 
 ### Delete User
-DELETE {{baseUrl}}/users/pg/1
+DELETE {{baseUrl}}/users/pg/cc7cba21-f2f9-4470-8709-5c59cbb2e223
 
 
