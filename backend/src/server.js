@@ -135,7 +135,7 @@ async function start() {
       console.log(`Server running on PORT: ${PORT} 🟢`);
     });
   } catch (err) {
-    console.error("Failed to conncet to MongoDB.", err.message);
+    console.error("Failed to start server ❌", err.message);
     process.exit(1);
   }
 }
