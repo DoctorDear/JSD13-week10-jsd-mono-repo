@@ -2,12 +2,14 @@ import express from "express";
 import { routes as apiRoutes } from "./routes/index.js";
 import { connectDB } from "./config/db.js";
 import { connectSupabase } from "./config/supabase.js";
+import { corsOptions } from "./config/cors.js";
+const cors = require("cors");
 const app = express();
 
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // CRUD routes and endpoints
-
 app.get("/", (req, res) => {
   res.send(`<!doctype html>
 <html lang="en">
