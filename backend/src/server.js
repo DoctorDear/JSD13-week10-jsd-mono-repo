@@ -3,7 +3,7 @@ import { routes as apiRoutes } from "./routes/index.js";
 import { connectDB } from "./config/db.js";
 import { connectSupabase } from "./config/supabase.js";
 import { corsOptions } from "./config/cors.js";
-const cors = require("cors");
+import cors from "cors";
 const app = express();
 
 app.use(cors(corsOptions));

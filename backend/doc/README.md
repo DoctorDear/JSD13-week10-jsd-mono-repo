@@ -39,6 +39,12 @@
    - เจาะลึก Preflight Request (`OPTIONS`) และ Header สำคัญ
    - การตั้งค่า `cors.js` (Allowed Origins, Credentials, Methods, Headers) และการเชื่อมต่อกับ React/Vite
 
+7. [**07. JWT & Authentication Guide**](file:///c:/Users/DoctorDear/Code/JSD13/week-10/jsd-mono-repo/backend/doc/JWT.md)
+   - JWT คืออะไร? (Header, Payload, Signature)
+   - เปรียบเทียบ Session vs Token-based Authentication
+   - ขั้นตอน Login, สร้าง Token, การเก็บใน HTTP-only Cookie vs Header
+   - ตัวอย่าง Middleware `verifyToken` และ Role-based Authorization
+
 ---
 
 ## 🏗️ โครงสร้างโฟลเดอร์ของโปรเจกต์ (Project Tree)
@@ -57,7 +63,8 @@ backend/
 │   ├── 03_MONGOOSE_AND_V2_CRUD.md
 │   ├── 04_API_TESTING_REST_CLIENT.md
 │   ├── CORS.md                  # คู่มือทำความเข้าใจและการตั้งค่า CORS
-│   └── ERROR_HANDLING.md
+│   ├── ERROR_HANDLING.md
+│   └── JWT.md                   # คู่มือ JWT และระบบยืนยันตัวตน
 └── src/
     ├── server.js                # จุดเริ่มต้นแอปพลิเคชัน (Entry Point)
     ├── config/
