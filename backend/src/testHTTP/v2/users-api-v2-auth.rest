@@ -13,3 +13,6 @@ Content-Type: application/json
     "password": "{{password}}"
 }
 
+
+### Logout
+POST {{baseUrl}}/logout

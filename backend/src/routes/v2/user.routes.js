@@ -131,3 +131,17 @@ router.post("/login", async (req, res, next) => {
     next(err);
   }
 });
+
+// Logout
+router.post("/logout", (req, res) => {
+  const isProd = process.env.NODE_ENV === "production";
+  res.clearCookie("accessToken", {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
+    path: "/",
+  });
+  return res
+    .status(200)
+    .json({ success: true, message: "Logout successfull!" });
+});
