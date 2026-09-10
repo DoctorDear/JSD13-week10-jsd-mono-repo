@@ -34,6 +34,11 @@
    - ความแตกต่างระหว่าง Client Error (400/404) และ Server Error (500)
    - กฎเหล็กของ Middleware 4 ตัวแปร `(err, req, res, next)` และหน้าที่ของ `next(err)`
 
+6. [**06. CORS Guide & Configuration**](file:///c:/Users/DoctorDear/Code/JSD13/week-10/jsd-mono-repo/backend/doc/CORS.md)
+   - CORS คืออะไร และทำไม Browser ถึงบล็อกคำขอข้าม Origin
+   - เจาะลึก Preflight Request (`OPTIONS`) และ Header สำคัญ
+   - การตั้งค่า `cors.js` (Allowed Origins, Credentials, Methods, Headers) และการเชื่อมต่อกับ React/Vite
+
 ---
 
 ## 🏗️ โครงสร้างโฟลเดอร์ของโปรเจกต์ (Project Tree)
@@ -51,10 +56,12 @@ backend/
 │   ├── 02_ROUTING_AND_V1_CRUD.md
 │   ├── 03_MONGOOSE_AND_V2_CRUD.md
 │   ├── 04_API_TESTING_REST_CLIENT.md
+│   ├── CORS.md                  # คู่มือทำความเข้าใจและการตั้งค่า CORS
 │   └── ERROR_HANDLING.md
 └── src/
     ├── server.js                # จุดเริ่มต้นแอปพลิเคชัน (Entry Point)
     ├── config/
+    │   ├── cors.js              # การตั้งค่า CORS สำหรับ Frontend
     │   └── db.js                # ฟังก์ชันเชื่อมต่อ MongoDB
     ├── fakeDB/
     │   └── fakeUsers.js         # ข้อมูลจำลองสำหรับ v1
