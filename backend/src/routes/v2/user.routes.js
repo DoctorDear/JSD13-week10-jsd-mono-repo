@@ -16,14 +16,14 @@ router.get("/", async (req, res, next) => {
 // Create users
 router.post("/", async (req, res, next) => {
   try {
-    const { username, email, password } = req.body; // รับจาก body
+    const { username, role, email, password } = req.body; // รับจาก body
 
-    if (!username || !email || !password) {
+    if (!username || !role || !email || !password) {
       return res
         .status(400)
         .json({ error: "username, email and password are required" });
     }
-    const newUser = await User.create({ username, email, password });
+    const newUser = await User.create({ username, role, email, password });
 
     const { password: _password, ...userWithoutPassword } = newUser.toObject();
     return res.status(201).json(userWithoutPassword);
