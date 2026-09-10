@@ -145,3 +145,27 @@ router.post("/logout", (req, res) => {
     .status(200)
     .json({ success: true, message: "Logout successfull!" });
 });
+
+router.get("/auth", async (req, res) => {
+  try {
+    const userId = req.user.user._id;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User not found!" });
+    }
+    return res.status(200).json({
+      success: true,
+      data: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
