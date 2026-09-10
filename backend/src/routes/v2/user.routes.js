@@ -3,6 +3,7 @@ import { Router } from "express";
 import { User } from "../../models/user.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { authUser } from "../../middlewares/authUser.js";
 export const router = Router();
 
 // Read user
@@ -146,7 +147,8 @@ router.post("/logout", (req, res) => {
     .json({ success: true, message: "Logout successfull!" });
 });
 
-router.get("/auth", async (req, res) => {
+// Check user's token
+router.get("/auth", authUser, async (req, res) => {
   try {
     const userId = req.user.user._id;
     const user = await User.findById(userId);
