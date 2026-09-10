@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import { Router } from "express";
 import { User } from "../../models/user.model.js";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 export const router = Router();
 
 // Read user
@@ -71,6 +73,39 @@ router.delete("/:id", async (req, res, next) => {
     res.status(200).json({
       message: "User successfully deleted",
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Login User
+
+router.post("/loging", async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Email and Password are required" });
+    }
+
+    const user = await User.findOne({ email }).select("+password");
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: "User not found!" });
+    }
+    const isMatched = await bcrypt.compare(password, user.password);
+
+    if (!isMatched) {
+      return res
+        .status(400)
+        .json({ success: false, message: "incorrect password!" });
+    }
+
+    jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
   } catch (err) {
     next(err);
   }
