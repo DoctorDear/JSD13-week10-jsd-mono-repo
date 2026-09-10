@@ -150,7 +150,7 @@ router.post("/logout", (req, res) => {
 // Check user's token
 router.get("/auth", authUser, async (req, res) => {
   try {
-    const userId = req.user.user._id;
+    const userId = req.user?.user?._id || req.user?.userId;
     const user = await User.findById(userId);
 
     if (!user) {
