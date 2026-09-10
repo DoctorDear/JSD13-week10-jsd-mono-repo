@@ -80,7 +80,7 @@ router.delete("/:id", async (req, res, next) => {
 
 // Login User
 
-router.post("/loging", async (req, res, next) => {
+router.post("/login", async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -109,12 +109,23 @@ router.post("/loging", async (req, res, next) => {
       expiresIn: "1h",
     });
 
+    const isProd = process.env.NODE_ENV === "production";
+
     res.cookie("accessToken", token, {
       httpOnly: true,
-      securem: isProd,
+      secure: isProd,
       sameSite: isProd ? "none" : "lax",
       path: "/",
       maxAge: 60 * 60 * 1000,
+    });
+    return res.status(200).json({
+      success: true,
+      message: "Login successful!",
+      user: {
+        message: user.username,
+        role: user.role,
+        email: user.email,
+      },
     });
   } catch (err) {
     next(err);
