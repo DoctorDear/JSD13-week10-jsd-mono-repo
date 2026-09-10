@@ -250,7 +250,71 @@ const res = await fetch("http://localhost:3001/api/v1/users", {
 
 ---
 
-## 8. Checklist ตรวจสอบและแก้ไขเมื่อติด CORS Error
+## 8. วิธีทดสอบ CORS จริงในทางปฏิบัติ (Testing CORS in Practice)
+
+เมื่อเปิดใช้งาน CORS ใน `server.js` เรียบร้อยแล้ว เราสามารถทดสอบจำลองคำขอจาก Origin ต่างๆ ได้ 3 วิธี:
+
+### วิธีที่ 1: ทดสอบผ่าน REST Client (`.rest`) — แนะนำที่สุด 👍
+สามารถเปิดไฟล์ `.rest` แล้วส่ง Header `Origin:` เพื่อจำลองหน้าบ้าน:
+
+#### เคสที่ 1: มาจาก Origin ที่อนุญาต (เช่น Vite พอร์ต 5173)
+```http
+### Test CORS: Allowed Origin (Vite)
+GET http://localhost:3001/api/v2/users
+Origin: http://localhost:5173
+```
+🔍 **สิ่งที่ต้องสังเกตใน Response Header:**
+```http
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: http://localhost:5173
+Access-Control-Allow-Credentials: true
+```
+> เซิร์ฟเวอร์จะแนบ `Access-Control-Allow-Origin` และ `Allow-Credentials: true` ตอบกลับมา แปลว่าผ่านฉลุย!
+
+#### เคสที่ 2: มาจาก Origin แปลกปลอมที่ไม่อนุญาต
+```http
+### Test CORS: Blocked Origin
+GET http://localhost:3001/api/v2/users
+Origin: http://evil-hacker.com
+```
+🔍 **สิ่งที่ต้องสังเกต:**
+```json
+HTTP/1.1 500 Internal Server Error
+{
+  "error": "Something went wrong on the server...",
+  "message": "Not allowed by CORS: http://evil-hacker.com"
+}
+```
+
+---
+
+### วิธีที่ 2: ทดสอบด้วยคำสั่ง Terminal (cURL)
+
+```bash
+# 1. ทดสอบ Origin ที่ถูกต้อง (ดู Header เฉพาะส่วนหัวด้วย -I)
+curl -I -H "Origin: http://localhost:5173" http://localhost:3001/api/v2/users
+
+# 2. ทดสอบ Origin ที่ไม่อนุญาต (ดูข้อความ Error ด้วย -i)
+curl -i -H "Origin: http://evil.com" http://localhost:3001/api/v2/users
+```
+
+---
+
+### วิธีที่ 3: ทดสอบในเบราว์เซอร์จริงผ่าน Frontend (React DevTools)
+
+1. รัน Frontend (`npm run dev` ใน `frontend/CRUD`)
+2. เปิดเบราว์เซอร์ `http://localhost:5173` กด **F12** ไปที่แท็บ **Console**
+3. รันโค้ด `fetch` เพื่อทดสอบ:
+```javascript
+fetch("http://localhost:3001/api/v2/users", { credentials: "include" })
+  .then(res => res.json())
+  .then(data => console.log("CORS ผ่าน ได้ข้อมูล:", data))
+  .catch(err => console.error("CORS บล็อก:", err));
+```
+
+---
+
+## 9. Checklist ตรวจสอบและแก้ไขเมื่อติด CORS Error
 
 หากคุณเจอปัญหา CORS ให้ไล่ตรวจทีละข้อตาม Checklist นี้:
 
@@ -265,7 +329,7 @@ const res = await fetch("http://localhost:3001/api/v1/users", {
 
 ---
 
-## 9. สรุปภาพรวม (Cheatsheet)
+## 10. สรุปภาพรวม (Cheatsheet)
 
 | คุณสมบัติ | ความหมาย & การใช้งาน |
 | :--- | :--- |

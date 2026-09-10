@@ -15,9 +15,9 @@
 
 ---
 
-## 2. เจาะลึกไฟล์ทดสอบ V1 (`users-apu-test.rest`)
+## 2. เจาะลึกไฟล์ทดสอบ V1 (`src/testHTTP/v1/users-api-test.rest`)
 
-ดูไฟล์ [`backend/users-apu-test.rest`](file:///c:/Users/DoctorDear/Code/JSD13/week-10/jsd-mono-repo/backend/users-apu-test.rest):
+ดูไฟล์ [`backend/src/testHTTP/v1/users-api-test.rest`](file:///c:/Users/DoctorDear/Code/JSD13/week-10/jsd-mono-repo/backend/src/testHTTP/v1/users-api-test.rest):
 
 ```http
 ### Read all users
@@ -60,9 +60,9 @@ Content-Type: application/json
 
 ---
 
-## 3. เจาะลึกไฟล์ทดสอบ V2 (`users-apu-test-v2.rest`)
+## 3. เจาะลึกไฟล์ทดสอบ V2 (`src/testHTTP/v2/users-api-test-v2.rest`)
 
-ดูไฟล์ [`backend/users-apu-test-v2.rest`](file:///c:/Users/DoctorDear/Code/JSD13/week-10/jsd-mono-repo/backend/users-apu-test-v2.rest):
+ดูไฟล์ [`backend/src/testHTTP/v2/users-api-test-v2.rest`](file:///c:/Users/DoctorDear/Code/JSD13/week-10/jsd-mono-repo/backend/src/testHTTP/v2/users-api-test-v2.rest):
 
 ```http
 @baseUrl = http://localhost:3001/api/v2
@@ -103,7 +103,44 @@ DELETE {{baseUrl}}/users/6a9e630136f97c1081654d56
 
 ---
 
-## 4. กฎไวยากรณ์ (Syntax Rules) ของ REST Client ที่ต้องระวัง
+## 4. เจาะลึกไฟล์ทดสอบ Auth Flow (`src/testHTTP/v2/users-api-v2-auth.rest`)
+
+ดูไฟล์ [`backend/src/testHTTP/v2/users-api-v2-auth.rest`](file:///c:/Users/DoctorDear/Code/JSD13/week-10/jsd-mono-repo/backend/src/testHTTP/v2/users-api-v2-auth.rest):
+ไฟล์นี้ถูกออกแบบมาเพื่อทดสอบ **Cookie-based Authentication Flow** ครบทั้ง 5 ขั้นตอน:
+
+```http
+@baseUrl = http://localhost:3001/api/v2/users
+@email = test02@example.com
+@password = pass123
+
+### 1. Check Auth without token (Expect 401 Access denied)
+GET {{baseUrl}}/auth
+
+### 2. Login success (Sets accessToken cookie)
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+    "email": "{{email}}",
+    "password": "{{password}}"
+}
+
+### 3. Check Auth with Cookie (Expect 200 OK & user data)
+GET {{baseUrl}}/auth
+
+### 4. Logout (Clears accessToken cookie)
+POST {{baseUrl}}/logout
+
+### 5. Check Auth after Logout (Expect 401 Access denied)
+GET {{baseUrl}}/auth
+```
+
+> **ความเจ๋งของ REST Client กับ Cookie**:
+> เมื่อเรายิงข้อ 2 (`POST /login`) แล้วเซิร์ฟเวอร์ส่ง `Set-Cookie: accessToken=...` กลับมา เจ้า Extension REST Client จะจดจำ Cookie นี้ไว้ในไฟล์ `cookies.txt` อัตโนมัติ! ทำให้เมื่อเรากดยิงข้อ 3 (`GET /auth`) มันจะแนบ Cookie ไปให้อัตโนมัติเหมือนเรากำลังเปิดเบราว์เซอร์จริงเลย!
+
+---
+
+## 5. กฎไวยากรณ์ (Syntax Rules) ของ REST Client ที่ต้องระวัง
 
 1. **เครื่องหมาย `###` (Triple Hash)**:
    - ใช้เพื่อแบ่งแยกระหว่าง Request แต่ละตัว **ห้ามลืมใส่** ไม่งั้นคำขอจะรวมกันเป็นคำสั่งเดียว
@@ -117,3 +154,5 @@ DELETE {{baseUrl}}/users/6a9e630136f97c1081654d56
      "username": "dear"
    }
    ```
+3. **การจำลอง Header สำหรับทดสอบ CORS**:
+   - สามารถพิมพ์ `Origin: http://localhost:5173` ใต้บรรทัด Method ได้เลย เพื่อทดสอบว่าเซิร์ฟเวอร์ตอบกลับ Header CORS ให้หรือไม่

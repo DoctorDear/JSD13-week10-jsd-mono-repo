@@ -32,3 +32,10 @@ Content-Type: application/json
 DELETE {{baseUrl}}/users/6a9e630136f97c1081654d56
 
 
+### Test CORS: Allowed Origin
+GET http://localhost:3001/api/v2/users
+Origin: http://localhost:5173
+
+### Test CORS: Blocked Origin
+GET http://localhost:3001/api/v2/users
+Origin: http://evil-hacker.com

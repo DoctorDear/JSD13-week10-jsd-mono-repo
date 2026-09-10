@@ -117,33 +117,44 @@ sequenceDiagram
 npm install jsonwebtoken bcrypt cookie-parser
 ```
 
-### 2) ตั้งค่ารหัสลับใน `.env`
-เพิ่มตัวแปรลับลงในไฟล์ [`backend/.env`](file:///c:/Users/DoctorDear/Code/JSD13/week-10/jsd-mono-repo/backend/.env):
+### 2) การสร้าง Secret Key ปลอดภัยสูง และตั้งค่าใน `.env`
+ในโปรเจกต์เรามีสคริปต์ [`backend/src/utils/generateSecretKey.js`](file:///c:/Users/DoctorDear/Code/JSD13/week-10/jsd-mono-repo/backend/src/utils/generateSecretKey.js) สำหรับสุ่มสร้างคีย์มาตรฐาน Cryptography:
+
+```javascript
+import { randomBytes } from "crypto";
+
+// สุ่มสร้าง String 64 ไบต์ (128 ตัวอักษร) แบบสุ่มแท้ที่เดาไม่ได้
+console.log(randomBytes(64).toString("hex"));
+```
+รันสคริปต์นี้เพื่อรับคีย์:
+```bash
+node src/utils/generateSecretKey.js
+```
+จากนั้นนำคีย์ที่ได้ไปใส่ใน [`backend/.env`](file:///c:/Users/DoctorDear/Code/JSD13/week-10/jsd-mono-repo/backend/.env):
 ```env
-JWT_SECRET=super_secret_jwt_key_jsd13_2026_random_long_string
-JWT_EXPIRES_IN=1d
+JWT_SECRET=ใส่_random_hex_string_64_bytes_ที่ได้จากสคริปต์
 ```
 
 ### 3) เปิดใช้งาน `cookie-parser` ใน [`backend/src/server.js`](file:///c:/Users/DoctorDear/Code/JSD13/week-10/jsd-mono-repo/backend/src/server.js)
 ```javascript
 import express from "express";
-import cors from "cors";
 import cookieParser from "cookie-parser"; // 👈 1. นำเข้า cookie-parser
 import { corsOptions } from "./config/cors.js";
+import cors from "cors";
 
 const app = express();
 
-app.use(cors(corsOptions));
+app.use(cors(corsOptions)); // 👈 2. เปิด CORS เพื่อรับส่ง Cookie ข้ามพอร์ต
 app.use(express.json());
-app.use(cookieParser()); // 👈 2. ให้อ่าน req.cookies ได้
+app.use(cookieParser());   // 👈 3. สำคัญมาก! เพื่อให้อ่าน req.cookies.accessToken ได้
 ```
 
 ---
 
-## 6. เจาะลึกโค้ดตัวอย่างระบบ Authentication ครบวงจร
+## 6. เจาะลึกโค้ดระบบ Authentication ครบวงจรในโปรเจกต์จริง
 
-### ขั้นที่ 1: Hash Password ตอนสมัครสมาชิก (`user.model.js`)
-ใช้ `userSchema.pre("save")` เพื่อ Hash รหัสผ่านก่อนลงฐานข้อมูลเสมอ:
+### ขั้นที่ 1: Hash Password ตอนสร้าง User (`src/models/user.model.js`)
+ใช้ `userSchema.pre("save")` เพื่อ Hash รหัสผ่านด้วย bcrypt ก่อนลง MongoDB เสมอ:
 ```javascript
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
@@ -151,8 +162,14 @@ import bcrypt from "bcrypt";
 const userSchema = mongoose.Schema({
   username: { type: String, unique: true },
   role: { type: String, enum: ["user", "admin"], default: "user" },
-  email: { type: String, unique: true, required: true },
-  password: { type: String, select: false }, // ซ่อนรหัสผ่านไม่ให้แสดงเวลา query ทั่วไป
+  email: {
+    type: String,
+    unique: true,
+    lowercase: true,
+    trim: true,
+    match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Invalid email format"],
+  },
+  password: { type: String, select: false }, // ซ่อนรหัสผ่านไม่ให้แสดงเวลา query
 }, { timestamps: true });
 
 // Hash รหัสผ่านเมื่อมีการสร้างหรือเปลี่ยน password
@@ -166,57 +183,60 @@ export const User = mongoose.model("User", userSchema);
 
 ---
 
-### ขั้นที่ 2: สร้าง Endpoint เข้าสู่ระบบ (`POST /login`)
+### ขั้นที่ 2: Endpoint เข้าสู่ระบบและออกตั๋ว (`POST /login`)
 ใน [`backend/src/routes/v2/user.routes.js`](file:///c:/Users/DoctorDear/Code/JSD13/week-10/jsd-mono-repo/backend/src/routes/v2/user.routes.js):
 ```javascript
-import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
-
-// Login endpoint
+// Login User
 router.post("/login", async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Email and Password are required" });
     }
 
     // 1. ค้นหา User โดยดึง password ออกมาด้วย (+password)
     const user = await User.findOne({ email }).select("+password");
     if (!user) {
-      return res.status(401).json({ error: "Invalid email or password" });
+      return res
+        .status(400)
+        .json({ success: false, message: "User not found!" });
     }
 
     // 2. ตรวจสอบรหัสผ่านว่าตรงกับ Hash ใน DB หรือไม่
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ error: "Invalid email or password" });
+    const isMatched = await bcrypt.compare(password, user.password);
+    if (!isMatched) {
+      return res
+        .status(400)
+        .json({ success: false, message: "incorrect password!" });
     }
 
-    // 3. สร้าง JWT Token
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET || "default_jwt_secret",
-      { expiresIn: "1d" }
-    );
+    // 3. สร้าง JWT Token กำหนดอายุ 1 ชั่วโมง
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
 
-    // 4. ส่ง Token กลับไปทาง HTTP-only Cookie
-    res.cookie("token", token, {
-      httpOnly: true, // ป้องกัน JavaScript อ่าน Cookie (กัน XSS)
-      secure: process.env.NODE_ENV === "production", // ใช้ HTTPS ใน production
-      sameSite: "lax", // ป้องกัน CSRF
-      maxAge: 24 * 60 * 60 * 1000, // อายุ 1 วัน
+    const isProd = process.env.NODE_ENV === "production";
+
+    // 4. ส่ง Token กลับไปทาง HTTP-only Cookie ชื่อ 'accessToken'
+    res.cookie("accessToken", token, {
+      httpOnly: true,                    // ป้องกัน XSS JavaScript ฝั่งหน้าบ้านขโมยไม่ได้
+      secure: isProd,                    // ถ้า Production ส่งผ่าน HTTPS เท่านั้น
+      sameSite: isProd ? "none" : "lax", // ป้องกัน CSRF
+      path: "/",
+      maxAge: 60 * 60 * 1000,            // อายุ Cookie 1 ชั่วโมง (มิลลิวินาที)
     });
 
     return res.status(200).json({
-      message: "Login successful",
+      success: true,
+      message: "Login successful!",
       user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
+        message: user.username,
         role: user.role,
+        email: user.email,
       },
-      token, // ส่ง token ให้เผื่อกรณี client อยากเก็บเอง
     });
   } catch (err) {
     next(err);
@@ -226,86 +246,131 @@ router.post("/login", async (req, res, next) => {
 
 ---
 
-### ขั้นที่ 3: Middleware ตรวจสอบสิทธิ์ (`auth.middleware.js`)
-สร้าง Middleware เพื่อดักจับ Token และคัดกรองสิทธิ์:
-
+### ขั้นที่ 3: Endpoint ออกจากระบบ ล้าง Cookie (`POST /logout`)
+ใน [`backend/src/routes/v2/user.routes.js`](file:///c:/Users/DoctorDear/Code/JSD13/week-10/jsd-mono-repo/backend/src/routes/v2/user.routes.js):
 ```javascript
-import jwt from "jsonwebtoken";
+// Logout
+router.post("/logout", (req, res) => {
+  const isProd = process.env.NODE_ENV === "production";
+  
+  // สั่งเบราว์เซอร์ทำลาย Cookie accessToken
+  res.clearCookie("accessToken", {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
+    path: "/",
+  });
 
-// Middleware ตรวจสอบว่าล็อกอินหรือยัง
-export const verifyToken = (req, res, next) => {
-  // 1. ดึง token ได้จากทั้ง Cookie หรือ Header
-  const token =
-    req.cookies?.token ||
-    req.headers.authorization?.split(" ")[1]; // Bearer <token>
-
-  if (!token) {
-    return res.status(401).json({ error: "Access denied. No token provided." });
-  }
-
-  try {
-    // 2. ตรวจสอบลายเซ็นและความถูกต้องของ Token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "default_jwt_secret");
-    
-    // 3. ฝากข้อมูล user ไว้ใน request object เพื่อให้ route ถัดไปหยิบใช้ได้
-    req.user = decoded;
-    next();
-  } catch (err) {
-    return res.status(403).json({ error: "Invalid or expired token" });
-  }
-};
-
-// Middleware สำหรับจำกัดสิทธิ์เฉพาะ Admin เท่านั้น
-export const requireAdmin = (req, res, next) => {
-  if (req.user?.role !== "admin") {
-    return res.status(403).json({ error: "Forbidden: Admin access required" });
-  }
-  next();
-};
-```
-
-#### การนำไปใช้ครอบ Route ที่ต้องการความปลอดภัย:
-```javascript
-import { verifyToken, requireAdmin } from "../../middlewares/auth.middleware.js";
-
-// ใครล็อกอินแล้วก็ดูโปรไฟล์ตัวเองได้
-router.get("/profile", verifyToken, async (req, res) => {
-  const user = await User.findById(req.user.id);
-  res.json(user);
-});
-
-// ต้องเป็น Admin เท่านั้นถึงจะลบผู้ใช้อื่นได้!
-router.delete("/:id", verifyToken, requireAdmin, async (req, res) => {
-  await User.findByIdAndDelete(req.params.id);
-  res.json({ message: "User deleted by admin" });
+  return res
+    .status(200)
+    .json({ success: true, message: "Logout successfull!" });
 });
 ```
 
 ---
 
-## 7. วิธีทดสอบด้วย REST Client (`.rest`)
+### ขั้นที่ 4: Middleware ยามตรวจตั๋ว (`src/middlewares/authUser.js`)
+สร้าง Middleware ไว้คอยตรวจว่า Request ที่ส่งเข้ามา มีตั๋ว Cookie ที่ถูกต้องหรือไม่:
+```javascript
+import jwt from "jsonwebtoken";
 
-ดูตัวอย่างการเขียนใน [`backend/src/testHTTP/v2/users-api-v2-auth.rest`](file:///c:/Users/DoctorDear/Code/JSD13/week-10/jsd-mono-repo/backend/src/testHTTP/v2/users-api-v2-auth.rest):
+export const authUser = async (req, res, next) => {
+  // 1. ดึง Token จาก Cookie ที่ชื่อ accessToken
+  let token = req.cookies.accessToken;
 
-```rest
+  // 2. ถ้าไม่มีตั๋ว แนบมา ➔ ปฏิเสธทันที
+  if (!token) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Access denied. No token!" });
+  }
+
+  try {
+    // 3. นำ Token ไปตรวจสอบลายเซ็นด้วย Secret Key ลับ
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+
+    // 4. แปะข้อมูลผู้ใช้ที่ถอดรหัสได้ไว้ใน req.user เพื่อให้ controller ถัดไปใช้งาน
+    req.user = { user: { _id: decodedToken.userId } };
+
+    // 5. ผ่านด่านได้! สั่ง next() ให้ไปทำงานต่อที่ Route จริง
+    next();
+  } catch (err) {
+    next(err);
+  }
+};
+```
+
+---
+
+### ขั้นที่ 5: Protected Route ตรวจสอบสถานะ User (`GET /auth`)
+ใน [`backend/src/routes/v2/user.routes.js`](file:///c:/Users/DoctorDear/Code/JSD13/week-10/jsd-mono-repo/backend/src/routes/v2/user.routes.js):
+```javascript
+import { authUser } from "../../middlewares/authUser.js";
+
+// Check user's token (Protected Route)
+router.get("/auth", authUser, async (req, res, next) => {
+  try {
+    // ดึง userId จากที่ authUser middleware ฝากไว้ให้
+    const userId = req.user?.user?._id || req.user?.userId;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User not found!" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+```
+
+---
+
+## 7. วิธีทดสอบ Full Auth Flow ด้วย REST Client (`.rest`)
+
+ดูตัวอย่างการทดสอบครบวงจร 5 ขั้นตอนใน [`backend/src/testHTTP/v2/users-api-v2-auth.rest`](file:///c:/Users/DoctorDear/Code/JSD13/week-10/jsd-mono-repo/backend/src/testHTTP/v2/users-api-v2-auth.rest):
+
+```http
 @baseUrl = http://localhost:3001/api/v2/users
+@email = test02@example.com
+@password = pass123
 
-### 1. เข้าสู่ระบบ (Login)
-# @name loginRequest
+### 1. Check Auth without token (ทดสอบตอนยังไม่ล็อกอิน)
+# คาดหวัง: 401 Access denied. No token! (เพราะยังไม่มี Cookie)
+GET {{baseUrl}}/auth
+
+### 2. Login success (ล็อกอินเพื่อรับ Cookie)
+# คาดหวัง: 200 OK + มี Set-Cookie: accessToken=... ส่งกลับมาเก็บใน REST Client อัตโนมัติ
 POST {{baseUrl}}/login
 Content-Type: application/json
 
 {
-    "email": "chirasak@gmail.com",
-    "password": "Password123!"
+    "email": "{{email}}",
+    "password": "{{password}}"
 }
 
-### 2. เก็บ Token จากผลลัพธ์ของ Login อัตโนมัติ
-@authToken = {{loginRequest.response.body.token}}
+### 3. Check Auth with Cookie (ทดสอบตอนถือ Cookie อยู่)
+# คาดหวัง: 200 OK + ข้อมูล User (username, email, role)
+GET {{baseUrl}}/auth
 
-### 3. เรียก Private Route ด้วย Authorization Header
-GET {{baseUrl}}/profile
-Authorization: Bearer {{authToken}}
+### 4. Logout (ออกจากระบบ)
+# คาดหวัง: 200 OK + สั่งล้าง Cookie accessToken
+POST {{baseUrl}}/logout
+
+### 5. Check Auth after Logout (ทดสอบหลังออกจากระบบแล้ว)
+# คาดหวัง: 401 Access denied. No token! (เพราะ Cookie ถูกทำลายไปแล้ว)
+GET {{baseUrl}}/auth
 ```
 
 ---

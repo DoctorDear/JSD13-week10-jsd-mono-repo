@@ -38,12 +38,15 @@
    - CORS คืออะไร และทำไม Browser ถึงบล็อกคำขอข้าม Origin
    - เจาะลึก Preflight Request (`OPTIONS`) และ Header สำคัญ
    - การตั้งค่า `cors.js` (Allowed Origins, Credentials, Methods, Headers) และการเชื่อมต่อกับ React/Vite
+   - **วิธีทดสอบ CORS จริง 3 รูปแบบ** ผ่าน REST Client, cURL, และ Browser DevTools
 
-7. [**07. JWT & Authentication Guide**](file:///c:/Users/DoctorDear/Code/JSD13/week-10/jsd-mono-repo/backend/doc/JWT.md)
+7. [**07. JWT & Authentication Guide (Phase 4)**](file:///c:/Users/DoctorDear/Code/JSD13/week-10/jsd-mono-repo/backend/doc/JWT.md)
    - JWT คืออะไร? (Header, Payload, Signature)
-   - เปรียบเทียบ Session vs Token-based Authentication
-   - ขั้นตอน Login, สร้าง Token, การเก็บใน HTTP-only Cookie vs Header
-   - ตัวอย่าง Middleware `verifyToken` และ Role-based Authorization
+   - สคริปต์สุ่มสร้างกุญแจลับปลอดภัยสูง (`src/utils/generateSecretKey.js`)
+   - ขั้นตอน Login (`POST /login`), สร้าง Token, การเก็บใน HTTP-only Cookie (`accessToken`)
+   - การสร้าง Middleware ตรวจสอบตั๋วเข้าห้องลับ (`src/middlewares/authUser.js`)
+   - Protected Route เช็คสถานะผู้ใช้ (`GET /auth`) และ Logout ล้าง Cookie (`POST /logout`)
+   - วิธีทดสอบ Full Auth Cycle ครบ 5 ขั้นตอนด้วย REST Client
 
 ---
 
@@ -51,37 +54,49 @@
 
 ```text
 backend/
-├── .env                         # ไฟล์เก็บ Environment Variables เช่น MONGODB_URI
+├── .env                         # ไฟล์เก็บ Environment Variables (URI, Secret, Port)
 ├── package.json                 # ไฟล์ตั้งค่าโปรเจกต์และ dependencies
 ├── splice.js                    # สคริปต์ทดลองเล่น Array.splice()
-├── users-apu-test.rest          # ไฟล์ทดสอบ API สำหรับ v1 (In-memory)
-├── users-apu-test-v2.rest       # ไฟล์ทดสอบ API สำหรับ v2 (MongoDB)
+├── cookies.txt                  # ไฟล์เก็บ Cookie สำหรับการทดสอบ (สร้างโดย REST client)
 ├── doc/                         # โฟลเดอร์คู่มือสำหรับมือใหม่
 │   ├── README.md                # 👈 สารบัญหลักหน้านี้
 │   ├── 01_SERVER_AND_CONFIG.md
 │   ├── 02_ROUTING_AND_V1_CRUD.md
 │   ├── 03_MONGOOSE_AND_V2_CRUD.md
 │   ├── 04_API_TESTING_REST_CLIENT.md
-│   ├── CORS.md                  # คู่มือทำความเข้าใจและการตั้งค่า CORS
+│   ├── CORS.md                  # คู่มือทำความเข้าใจและการตั้งค่า/ทดสอบ CORS
 │   ├── ERROR_HANDLING.md
-│   └── JWT.md                   # คู่มือ JWT และระบบยืนยันตัวตน
+│   └── JWT.md                   # คู่มือ JWT และระบบยืนยันตัวตน Phase 4
 └── src/
     ├── server.js                # จุดเริ่มต้นแอปพลิเคชัน (Entry Point)
     ├── config/
     │   ├── cors.js              # การตั้งค่า CORS สำหรับ Frontend
-    │   └── db.js                # ฟังก์ชันเชื่อมต่อ MongoDB
+    │   ├── db.js                # ฟังก์ชันเชื่อมต่อ MongoDB (Mongoose)
+    │   └── supabase.js          # ฟังก์ชันเชื่อมต่อ Supabase PostgreSQL
     ├── fakeDB/
     │   └── fakeUsers.js         # ข้อมูลจำลองสำหรับ v1
+    ├── middlewares/
+    │   └── authUser.js          # 🛡️ Middleware ตรวจสอบ JWT Cookie (Phase 4)
     ├── models/
-    │   └── user.model.js        # Mongoose Schema & Model สำหรับ v2
-    └── routes/
-        ├── index.js             # Route หลักสำหรับรวม /v1 และ /v2 เข้ากับ /api
-        ├── v1/
-        │   ├── index.js         # รวม route ย่อยของ v1
-        │   └── user.routes.js   # CRUD ด้วย JavaScript Array
-        └── v2/
-            ├── index.js         # รวม route ย่อยของ v2
-            └── user.routes.js   # CRUD เชื่อมต่อ MongoDB จริง
+    │   └── user.model.js        # Mongoose Schema & Model สำหรับ v2 (Bcrypt Hash)
+    ├── routes/
+    │   ├── index.js             # Route หลักสำหรับรวม /v1 และ /v2 เข้ากับ /api
+    │   ├── v1/
+    │   │   ├── index.js         # รวม route ย่อยของ v1
+    │   │   └── user.routes.js   # CRUD ด้วย JavaScript Array
+    │   └── v2/
+    │       ├── index.js         # รวม route ย่อยของ v2
+    │       ├── user.routes.js   # CRUD เชื่อมต่อ MongoDB + Auth Login/Logout/Auth
+    │       └── user.supabase.routes.js # CRUD เชื่อมต่อ Supabase PostgreSQL
+    ├── testHTTP/                # ไฟล์ทดสอบ API ด้วย REST Client
+    │   ├── v1/
+    │   │   └── users-api-test.rest
+    │   └── v2/
+    │       ├── users-api-test-v2.rest
+    │       ├── users-api-v2-auth.rest     # 🧪 ทดสอบ Full Auth Cycle 5 สเต็ป
+    │       └── users-api-test-v2-pg.rest  # ทดสอบ Supabase API
+    └── utils/
+        └── generateSecretKey.js # 🔑 สคริปต์สร้าง 64-byte random secret key
 ```
 
 ---

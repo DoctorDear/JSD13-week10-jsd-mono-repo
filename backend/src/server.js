@@ -3,11 +3,11 @@ import cookieParser from "cookie-parser";
 import { routes as apiRoutes } from "./routes/index.js";
 import { connectDB } from "./config/db.js";
 import { connectSupabase } from "./config/supabase.js";
-// import { corsOptions } from "./config/cors.js";
-// import cors from "cors";
+import { corsOptions } from "./config/cors.js";
+import cors from "cors";
 const app = express();
 
-// app.use(cors(corsOptions));
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
